@@ -16,6 +16,9 @@ const COLUMNS = [
 
 // ── State ──────────────────────────────────────
 let drawn = []; // ordered list of drawn numbers
+let holdTimer = null;
+let wasHeld   = false;
+const HOLD_DURATION = 600; // ms
 
 // ── DOM refs ───────────────────────────────────
 const htmlEl         = document.documentElement;
@@ -66,7 +69,16 @@ function buildGrid() {
       cell.textContent = n;
       cell.dataset.number = n;
       if (drawn.includes(n)) cell.classList.add('drawn');
+      if (drawn.length > 0 && drawn[drawn.length - 1] === n) cell.classList.add('last-drawn');
+
       cell.addEventListener('click', () => handleDraw(n, cell));
+
+      // Hold-to-deselect (last drawn only)
+      cell.addEventListener('pointerdown', () => startHold(n, cell));
+      cell.addEventListener('pointerup',    () => cancelHold(cell));
+      cell.addEventListener('pointerleave', () => cancelHold(cell));
+      cell.addEventListener('pointercancel',() => cancelHold(cell));
+
       row.appendChild(cell);
     }
 
@@ -76,12 +88,48 @@ function buildGrid() {
 
 // ── Draw ───────────────────────────────────────
 function handleDraw(n, cell) {
+  if (wasHeld) { wasHeld = false; return; }
   if (drawn.includes(n)) return;
   drawn.push(n);
   cell.classList.add('drawn');
+  updateLastDrawnMarker();
   saveGame();
   updateCounter();
   updateHistory();
+}
+
+// ── Deselect (hold on last drawn) ─────────────
+function startHold(n, cell) {
+  if (drawn.length === 0 || drawn[drawn.length - 1] !== n) return;
+  cell.classList.add('holding');
+  holdTimer = setTimeout(() => {
+    wasHeld = true;
+    cell.classList.remove('holding');
+    deselect(n, cell);
+  }, HOLD_DURATION);
+}
+
+function cancelHold(cell) {
+  if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; }
+  cell.classList.remove('holding');
+}
+
+function deselect(n, cell) {
+  drawn = drawn.filter(x => x !== n);
+  cell.classList.remove('drawn', 'last-drawn');
+  updateLastDrawnMarker();
+  saveGame();
+  updateCounter();
+  updateHistory();
+}
+
+function updateLastDrawnMarker() {
+  // Remove marker from all cells then re-apply to current last
+  bingoGrid.querySelectorAll('.last-drawn').forEach(c => c.classList.remove('last-drawn'));
+  if (drawn.length === 0) return;
+  const last = drawn[drawn.length - 1];
+  const lastCell = bingoGrid.querySelector(`[data-number="${last}"]`);
+  if (lastCell) lastCell.classList.add('last-drawn');
 }
 
 // ── Counter ────────────────────────────────────

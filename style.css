@@ -252,6 +252,20 @@ html, body {
   cursor: default;
 }
 
+.bingo-cell.drawn.last-drawn {
+  cursor: pointer;
+}
+
+.bingo-cell.drawn.holding {
+  animation: hold-charge 0.6s linear forwards;
+}
+
+@keyframes hold-charge {
+  0%   { filter: brightness(1)   scale(1); }
+  60%  { filter: brightness(1.4); }
+  100% { filter: brightness(1.9); box-shadow: 0 0 14px var(--pico-primary-inverse); }
+}
+
 /* =============================================
    Modal
    ============================================= */
