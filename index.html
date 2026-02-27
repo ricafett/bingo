@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="pt-PT" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bingo</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- Resume / New Game Modal -->
+  <dialog id="resume-modal">
+    <article>
+      <h2>Jogo guardado</h2>
+      <p>Existe um jogo em curso. Deseja retomar ou iniciar um novo jogo?</p>
+      <footer>
+        <button id="btn-resume" class="btn-resume">Retomar</button>
+        <button id="btn-new-from-modal" class="secondary">Novo Jogo</button>
+      </footer>
+    </article>
+  </dialog>
+
+  <!-- Main App -->
+  <div id="app">
+
+    <!-- Header -->
+    <header id="main-header">
+      <span id="title">BINGO</span>
+      <span id="game-heading" contenteditable="true" spellcheck="false" title="Clique para editar">O meu Bingo</span>
+      <div id="header-actions">
+        <button id="btn-theme" class="outline secondary icon-btn" title="Alternar tema">☀️</button>
+        <button id="btn-new-game" class="outline secondary">Novo Jogo</button>
+      </div>
+    </header>
+
+    <!-- History Strip -->
+    <section id="history-section">
+      <div id="history-strip">
+        <span id="history-empty">Nenhuma bola sorteada ainda.</span>
+      </div>
+      <div id="counter-panel">
+        <span id="counter">0</span>
+        <span id="counter-label">/ 75<br>bolas sorteadas</span>
+      </div>
+    </section>
+
+    <!-- Number Grid -->
+    <main id="grid-section">
+      <div id="bingo-grid">
+        <!-- Columns rendered by JS -->
+      </div>
+    </main>
+
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
