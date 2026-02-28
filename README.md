@@ -2,7 +2,7 @@
 
 A simple, clean, single-page fullscreen Bingo caller web app. No installation required — just open `index.html` in any modern browser.
 
-![Bingo Flashcard screenshot](https://via.placeholder.com/800x450?text=Bingo+Flashcard)
+🔗 **[Live demo → ricafett.github.io/bingo](https://ricafett.github.io/bingo/)**
 
 ## Features
 
