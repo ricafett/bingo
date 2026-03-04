@@ -63,13 +63,44 @@ function parsePositiveInteger(text, fallback) {
 }
 
 function parseEuroAmount(text, fallback) {
-  const normalized = (text || '')
+  const cleaned = (text || '')
     .replace(/\s/g, '')
     .replace(/€/g, '')
-    .replace(/\./g, '')
-    .replace(',', '.');
+    .replace(/[^\d.,-]/g, '');
+
+  if (!cleaned) return fallback;
+
+  const lastComma = cleaned.lastIndexOf(',');
+  const lastDot = cleaned.lastIndexOf('.');
+
+  let normalized = cleaned;
+
+  if (lastComma !== -1 && lastDot !== -1) {
+    // Assume the right-most separator is decimal and treat the other as thousands.
+    if (lastComma > lastDot) {
+      normalized = cleaned.replace(/\./g, '').replace(',', '.');
+    } else {
+      normalized = cleaned.replace(/,/g, '');
+    }
+  } else if (lastComma !== -1 || lastDot !== -1) {
+    const separator = lastComma !== -1 ? ',' : '.';
+    const parts = cleaned.split(separator);
+    const hasMultipleSeparators = parts.length > 2;
+    const fractionalPart = parts[parts.length - 1];
+
+    if (hasMultipleSeparators || fractionalPart.length === 3) {
+      // Treat single/multiple 3-digit groups as thousands separators (e.g., 1.234 or 1,234).
+      normalized = cleaned.replace(/[.,]/g, '');
+    } else if (separator === ',') {
+      normalized = cleaned.replace(',', '.');
+    } else {
+      // Dot-decimal input from numpad/clipboard (e.g., 12.50).
+      normalized = cleaned;
+    }
+  }
+
   const parsed = Number.parseFloat(normalized);
-  if (Number.isNaN(parsed) || parsed < 0) return fallback;
+  if (!Number.isFinite(parsed) || parsed < 0) return fallback;
   return Math.round(parsed * 100) / 100;
 }
 
