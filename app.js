@@ -4,7 +4,12 @@
 
 const STORAGE_KEY = 'bingo_game';
 const THEME_KEY   = 'bingo_theme';
+const HEADING_KEY = 'bingo_heading';
 const TOTAL_BALLS = 75;
+
+const DEFAULT_ROUND_NUMBER = 1;
+const DEFAULT_LINE_PRIZE = 0;
+const DEFAULT_BINGO_PRIZE = 0;
 
 const COLUMNS = [
   { letter: 'B', min: 1,  max: 15 },
@@ -16,22 +21,67 @@ const COLUMNS = [
 
 // ── State ──────────────────────────────────────
 let drawn = []; // ordered list of drawn numbers
+let roundNumber = DEFAULT_ROUND_NUMBER;
+let linePrize = DEFAULT_LINE_PRIZE;
+let bingoPrize = DEFAULT_BINGO_PRIZE;
 let holdTimer = null;
 let wasHeld   = false;
 const HOLD_DURATION = 600; // ms
 
+const euroFormatter = new Intl.NumberFormat('pt-PT', {
+  style: 'currency',
+  currency: 'EUR',
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 2,
+});
+
 // ── DOM refs ───────────────────────────────────
-const htmlEl         = document.documentElement;
-const resumeModal    = document.getElementById('resume-modal');
-const btnResume      = document.getElementById('btn-resume');
-const btnNewFromModal= document.getElementById('btn-new-from-modal');
-const btnNewGame     = document.getElementById('btn-new-game');
-const btnTheme       = document.getElementById('btn-theme');
-const counterEl      = document.getElementById('counter');
-const historyStrip   = document.getElementById('history-strip');
-const historyEmpty   = document.getElementById('history-empty');
-const bingoGrid      = document.getElementById('bingo-grid');
-const gameHeading    = document.getElementById('game-heading');
+const htmlEl            = document.documentElement;
+const resumeModal       = document.getElementById('resume-modal');
+const newGameModal      = document.getElementById('new-game-modal');
+const btnResume         = document.getElementById('btn-resume');
+const btnNewFromModal   = document.getElementById('btn-new-from-modal');
+const btnConfirmNewGame = document.getElementById('btn-confirm-new-game');
+const btnCancelNewGame  = document.getElementById('btn-cancel-new-game');
+const chkResetAll       = document.getElementById('chk-reset-all');
+const btnNewGame        = document.getElementById('btn-new-game');
+const btnTheme          = document.getElementById('btn-theme');
+const counterEl         = document.getElementById('counter');
+const historyStrip      = document.getElementById('history-strip');
+const historyEmpty      = document.getElementById('history-empty');
+const bingoGrid         = document.getElementById('bingo-grid');
+const gameHeading       = document.getElementById('game-heading');
+const roundNumberEl     = document.getElementById('round-number');
+const linePrizeEl       = document.getElementById('line-prize');
+const bingoPrizeEl      = document.getElementById('bingo-prize');
+
+// ── Helpers ────────────────────────────────────
+function parsePositiveInteger(text, fallback) {
+  const parsed = parseInt((text || '').replace(/\D+/g, ''), 10);
+  if (Number.isNaN(parsed) || parsed <= 0) return fallback;
+  return parsed;
+}
+
+function parseEuroAmount(text, fallback) {
+  const normalized = (text || '')
+    .replace(/\s/g, '')
+    .replace(/€/g, '')
+    .replace(/\./g, '')
+    .replace(',', '.');
+  const parsed = Number.parseFloat(normalized);
+  if (Number.isNaN(parsed) || parsed < 0) return fallback;
+  return Math.round(parsed * 100) / 100;
+}
+
+function formatEuro(value) {
+  return euroFormatter.format(value);
+}
+
+function updateMetaDisplay() {
+  roundNumberEl.textContent = String(roundNumber);
+  linePrizeEl.textContent = formatEuro(linePrize);
+  bingoPrizeEl.textContent = formatEuro(bingoPrize);
+}
 
 // ── Theme ──────────────────────────────────────
 function applyTheme(theme) {
@@ -161,7 +211,12 @@ function updateHistory() {
 
 // ── LocalStorage ──────────────────────────────
 function saveGame() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify({ drawn }));
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({
+    drawn,
+    roundNumber,
+    linePrize,
+    bingoPrize,
+  }));
 }
 
 function loadGame() {
@@ -178,13 +233,23 @@ function clearGame() {
   localStorage.removeItem(STORAGE_KEY);
 }
 
-// ── New Game ───────────────────────────────────
-function startNewGame() {
+// ── New Game / New Round ──────────────────────
+function startNewRound({ resetAllValues = false } = {}) {
   drawn = [];
-  clearGame();
+
+  if (resetAllValues) {
+    roundNumber = DEFAULT_ROUND_NUMBER;
+    linePrize = DEFAULT_LINE_PRIZE;
+    bingoPrize = DEFAULT_BINGO_PRIZE;
+  } else {
+    roundNumber += 1;
+  }
+
+  saveGame();
   buildGrid();
   updateCounter();
   updateHistory();
+  updateMetaDisplay();
 }
 
 // ── Modal ─────────────────────────────────────
@@ -196,9 +261,16 @@ function hideResumeModal() {
   resumeModal.removeAttribute('open');
 }
 
-// ── Editable Heading ──────────────────────────
-const HEADING_KEY = 'bingo_heading';
+function showNewGameModal() {
+  chkResetAll.checked = false;
+  newGameModal.setAttribute('open', '');
+}
 
+function hideNewGameModal() {
+  newGameModal.removeAttribute('open');
+}
+
+// ── Editable Heading ──────────────────────────
 function loadHeading() {
   const saved = localStorage.getItem(HEADING_KEY);
   if (saved) gameHeading.textContent = saved;
@@ -214,6 +286,24 @@ function saveHeading() {
   }
 }
 
+function saveRoundNumber() {
+  roundNumber = parsePositiveInteger(roundNumberEl.textContent, roundNumber);
+  updateMetaDisplay();
+  saveGame();
+}
+
+function saveLinePrize() {
+  linePrize = parseEuroAmount(linePrizeEl.textContent, linePrize);
+  updateMetaDisplay();
+  saveGame();
+}
+
+function saveBingoPrize() {
+  bingoPrize = parseEuroAmount(bingoPrizeEl.textContent, bingoPrize);
+  updateMetaDisplay();
+  saveGame();
+}
+
 gameHeading.addEventListener('blur', saveHeading);
 gameHeading.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') {
@@ -222,6 +312,29 @@ gameHeading.addEventListener('keydown', (e) => {
   }
 });
 
+roundNumberEl.addEventListener('blur', saveRoundNumber);
+roundNumberEl.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    roundNumberEl.blur();
+  }
+});
+
+linePrizeEl.addEventListener('blur', saveLinePrize);
+linePrizeEl.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    linePrizeEl.blur();
+  }
+});
+
+bingoPrizeEl.addEventListener('blur', saveBingoPrize);
+bingoPrizeEl.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    bingoPrizeEl.blur();
+  }
+});
 
 // ── History wheel scroll ───────────────────────
 historyStrip.addEventListener('wheel', (e) => {
@@ -237,17 +350,25 @@ btnResume.addEventListener('click', () => {
   buildGrid();
   updateCounter();
   updateHistory();
+  updateMetaDisplay();
 });
 
 btnNewFromModal.addEventListener('click', () => {
   hideResumeModal();
-  startNewGame();
+  startNewRound();
 });
 
 btnNewGame.addEventListener('click', () => {
-  if (drawn.length === 0) return;
-  const confirmed = window.confirm('Tem a certeza que quer iniciar um novo jogo? O jogo atual será apagado.');
-  if (confirmed) startNewGame();
+  showNewGameModal();
+});
+
+btnConfirmNewGame.addEventListener('click', () => {
+  hideNewGameModal();
+  startNewRound({ resetAllValues: chkResetAll.checked });
+});
+
+btnCancelNewGame.addEventListener('click', () => {
+  hideNewGameModal();
 });
 
 btnTheme.addEventListener('click', toggleTheme);
@@ -258,14 +379,29 @@ btnTheme.addEventListener('click', toggleTheme);
   loadHeading();
 
   const saved = loadGame();
-  if (saved && Array.isArray(saved.drawn) && saved.drawn.length > 0) {
+  if (saved && Array.isArray(saved.drawn)) {
     drawn = saved.drawn;
-    showResumeModal();
-    // Render initial empty state under the modal; actual render happens on modal action
+    roundNumber = parsePositiveInteger(String(saved.roundNumber ?? DEFAULT_ROUND_NUMBER), DEFAULT_ROUND_NUMBER);
+    linePrize = Number.isFinite(saved.linePrize) ? Math.max(0, saved.linePrize) : DEFAULT_LINE_PRIZE;
+    bingoPrize = Number.isFinite(saved.bingoPrize) ? Math.max(0, saved.bingoPrize) : DEFAULT_BINGO_PRIZE;
+
+    if (drawn.length > 0) {
+      showResumeModal();
+    }
+
     buildGrid();
     updateCounter();
     updateHistory();
+    updateMetaDisplay();
   } else {
-    startNewGame();
+    drawn = [];
+    roundNumber = DEFAULT_ROUND_NUMBER;
+    linePrize = DEFAULT_LINE_PRIZE;
+    bingoPrize = DEFAULT_BINGO_PRIZE;
+    saveGame();
+    buildGrid();
+    updateCounter();
+    updateHistory();
+    updateMetaDisplay();
   }
 })();

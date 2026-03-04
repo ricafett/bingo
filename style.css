@@ -113,6 +113,55 @@ html, body {
   gap: 1rem;
 }
 
+
+#meta-panel {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.meta-item {
+  min-width: 6.2rem;
+  padding: 0.3rem 0.45rem;
+  border-right: 1px solid var(--pico-muted-border-color);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.1rem;
+}
+
+.meta-value {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: var(--pico-primary);
+  line-height: 1.1;
+  text-align: center;
+  border-bottom: 1px dashed transparent;
+  border-radius: 4px;
+  padding: 0.05rem 0.25rem;
+  cursor: text;
+  outline: none;
+  min-width: 4.3rem;
+}
+
+.meta-value:hover {
+  border-color: var(--pico-muted-border-color);
+}
+
+.meta-value:focus {
+  border-color: var(--pico-primary);
+  background: var(--pico-card-background-color);
+}
+
+.meta-label {
+  font-size: 1rem;
+  opacity: 0.65;
+  text-align: center;
+  line-height: 1.2;
+}
 #history-strip {
   display: flex;
   align-items: center;
@@ -121,10 +170,18 @@ html, body {
   padding: 0.25rem 0.5rem;
   min-height: 6rem;
   flex: 1;
-  scrollbar-width: thin;
+  scrollbar-width: none;
 }
 
 #history-strip::-webkit-scrollbar {
+  height: 0;
+}
+
+#history-strip:hover {
+  scrollbar-width: thin;
+}
+
+#history-strip:hover::-webkit-scrollbar {
   height: 4px;
 }
 
