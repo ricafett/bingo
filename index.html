@@ -21,6 +21,22 @@
     </article>
   </dialog>
 
+  <!-- Confirm New Game Modal -->
+  <dialog id="new-game-modal">
+    <article>
+      <h2>Novo jogo</h2>
+      <p>Tem a certeza que quer iniciar um novo jogo? O jogo atual será apagado.</p>
+      <label>
+        <input id="chk-reset-all" type="checkbox" />
+        Limpar Série e prémios (voltar aos valores por defeito)
+      </label>
+      <footer>
+        <button id="btn-confirm-new-game" class="secondary">Novo Jogo</button>
+        <button id="btn-cancel-new-game">Cancelar</button>
+      </footer>
+    </article>
+  </dialog>
+
   <!-- Main App -->
   <div id="app">
 
@@ -36,9 +52,25 @@
 
     <!-- History Strip -->
     <section id="history-section">
+      <div id="meta-panel">
+        <div class="meta-item">
+          <span class="meta-value" id="round-number" contenteditable="true" spellcheck="false">1</span>
+          <span class="meta-label">Série</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-value" id="line-prize" contenteditable="true" spellcheck="false">0 €</span>
+          <span class="meta-label">Prémio Linha</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-value" id="bingo-prize" contenteditable="true" spellcheck="false">0 €</span>
+          <span class="meta-label">Prémio BINGO</span>
+        </div>
+      </div>
+
       <div id="history-strip">
         <span id="history-empty">Nenhuma bola sorteada ainda.</span>
       </div>
+
       <div id="counter-panel">
         <span id="counter">0</span>
         <span id="counter-label">/ 75<br>bolas sorteadas</span>
