@@ -9,9 +9,11 @@ A simple, clean, single-page fullscreen Bingo caller web app. No installation re
 - **Manual draw** — click any number on the board to draw it; no auto-draw
 - **B/I/N/G/O grid** — 75 numbers organised in 5 rows (1–15, 16–30, 31–45, 46–60, 61–75); drawn numbers stay permanently highlighted
 - **History strip** — scrollable bar showing all drawn numbers in reverse order (most recent first, displayed larger); scroll with mouse wheel
+- **Undo last draw (hold)** — press and hold the most recently drawn number on the grid (~600ms) to remove it
 - **Ball counter** — live count of drawn balls alongside the history
-- **Editable game title** — click the heading in the top bar to rename your game; saved automatically
+- **Editable game title and round/prize metadata** — click to edit the heading, Série, Prémio Linha, and Prémio BINGO values; saved automatically
 - **Resume or New Game** — on page load, if a game is in progress a prompt lets you resume or start fresh
+- **New game reset option** — from the new-game modal, optionally reset Série and prize values back to defaults
 - **LocalStorage persistence** — game state and title survive page refreshes
 - **Light / Dark theme** — toggle with the ☀️/🌙 button; preference is remembered
 
