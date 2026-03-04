@@ -45,6 +45,7 @@ const btnConfirmNewGame = document.getElementById('btn-confirm-new-game');
 const btnCancelNewGame  = document.getElementById('btn-cancel-new-game');
 const chkResetAll       = document.getElementById('chk-reset-all');
 const btnNewGame        = document.getElementById('btn-new-game');
+const btnFullscreen     = document.getElementById('btn-fullscreen');
 const btnTheme          = document.getElementById('btn-theme');
 const counterEl         = document.getElementById('counter');
 const historyStrip      = document.getElementById('history-strip');
@@ -130,6 +131,85 @@ function toggleTheme() {
 function loadTheme() {
   const saved = localStorage.getItem(THEME_KEY) || 'dark';
   applyTheme(saved);
+}
+
+// ── Fullscreen ────────────────────────────────
+function getFullscreenElement() {
+  return document.fullscreenElement
+    || document.webkitFullscreenElement
+    || document.msFullscreenElement
+    || null;
+}
+
+function updateFullscreenButtonState() {
+  const isFullscreen = Boolean(getFullscreenElement());
+  btnFullscreen.textContent = isFullscreen ? '🡼' : '⛶';
+  btnFullscreen.title = isFullscreen ? 'Sair do ecrã inteiro' : 'Ecrã inteiro';
+  btnFullscreen.setAttribute('aria-label', btnFullscreen.title);
+}
+
+function isIOSDevice() {
+  const ua = navigator.userAgent || '';
+  return /iPad|iPhone|iPod/.test(ua)
+    || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+}
+
+function supportsFullscreen() {
+  return Boolean(
+    document.fullscreenEnabled
+      || document.webkitFullscreenEnabled
+      || document.msFullscreenEnabled,
+  );
+}
+
+async function enterFullscreen() {
+  const element = document.documentElement;
+  if (element.requestFullscreen) return element.requestFullscreen();
+  if (element.webkitRequestFullscreen) return element.webkitRequestFullscreen();
+  if (element.msRequestFullscreen) return element.msRequestFullscreen();
+  throw new Error('Fullscreen API não suportada neste navegador.');
+}
+
+async function exitFullscreen() {
+  if (document.exitFullscreen) return document.exitFullscreen();
+  if (document.webkitExitFullscreen) return document.webkitExitFullscreen();
+  if (document.msExitFullscreen) return document.msExitFullscreen();
+  throw new Error('Não foi possível sair do ecrã inteiro.');
+}
+
+async function toggleFullscreen() {
+  try {
+    if (getFullscreenElement()) {
+      await exitFullscreen();
+    } else {
+      await enterFullscreen();
+    }
+  } catch {
+    // Ignore errors that require user gesture or unsupported scenarios.
+  } finally {
+    updateFullscreenButtonState();
+  }
+}
+
+function configureFullscreenButton() {
+  const isSupported = supportsFullscreen() && !isIOSDevice();
+  btnFullscreen.hidden = !isSupported;
+
+  if (!isSupported) return;
+
+  updateFullscreenButtonState();
+  btnFullscreen.addEventListener('click', toggleFullscreen);
+
+  document.addEventListener('fullscreenchange', updateFullscreenButtonState);
+  document.addEventListener('webkitfullscreenchange', updateFullscreenButtonState);
+  document.addEventListener('MSFullscreenChange', updateFullscreenButtonState);
+
+  // Best-effort sync for browser fullscreen toggled via F11.
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'F11') {
+      setTimeout(updateFullscreenButtonState, 100);
+    }
+  });
 }
 
 // ── Grid ───────────────────────────────────────
@@ -407,6 +487,7 @@ btnTheme.addEventListener('click', toggleTheme);
 // ── Init ───────────────────────────────────────
 (function init() {
   loadTheme();
+  configureFullscreenButton();
   loadHeading();
 
   const saved = loadGame();
